@@ -8,7 +8,6 @@ void Lock::WriteLock(const char* name)
 #if _DEBUG
 	GDeadLockDetector->PushLock(name);
 #endif
-
 	// 재귀적인 Lock을 걸어줄 경우 무조건 성공
 	const uint32 lockThreadId = (_lockFlag.load() & WRITE_THREAD_MASK) >> 16;
 	if (LThreadId == lockThreadId)
@@ -47,7 +46,6 @@ void Lock::WriteUnLock(const char* name)
 #if _DEBUG
 	GDeadLockDetector->PopLock(name);
 #endif
-
 	if ((_lockFlag.load() & READ_COUNT_MASK) != 0)
 		CRASH("INVALID_UNLOCK_ORDER");
 
@@ -61,7 +59,6 @@ void Lock::ReadLock(const char* name)
 #if _DEBUG
 	GDeadLockDetector->PushLock(name);
 #endif
-
 	const uint32 lockThreadId = _lockFlag.load() & WRITE_THREAD_MASK;
 	if (LThreadId == lockThreadId)
 	{

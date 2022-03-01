@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "CoreGlobal.h"
-#include  "ThreadManager.h"
+#include "ThreadManager.h"
 #include "DeadLockDetector.h"
 
 ThreadManager* GThreadManager = nullptr;

@@ -3,12 +3,12 @@
 
 void DeadLockDetector::PushLock(const char* name)
 {
-	LockGuard guard(_lock);
+	LockGuard lockguard(_lock);
 
-	int32 lockId = 0;
-
-	auto findIt = _nameToId.find(name);
-	if (findIt == _nameToId.end())
+	int32 lockId;
+	auto nameFind = _nameToId.find(name);
+	// 해당하는 lock이 정보에 업을 경우
+	if (nameFind == _nameToId.end())
 	{
 		lockId = static_cast<int32>(_nameToId.size());
 		_nameToId[name] = lockId;
@@ -16,99 +16,99 @@ void DeadLockDetector::PushLock(const char* name)
 	}
 	else
 	{
-		lockId = findIt->second;
+		lockId = nameFind->second;
 	}
 
-	if (LLockStack.empty() == false)
+	if (_lockStack.empty() == false)
 	{
-		const int32 previd = LLockStack.top();
-		if (lockId != previd)
+		int32 topId = _lockStack.top();
+		if (topId != lockId)
 		{
-			std::set<int32>&history = _lockHistory[previd];
+			std::set<int32>& history = _lockHistory[topId];
 			if (history.find(lockId) == history.end())
 			{
-				history.insert(lockId);
+				_lockHistory[topId].insert(lockId);
 				CheckCycle();
 			}
 		}
 	}
-	LLockStack.push(lockId);
+	_lockStack.push(lockId);
+	return;
 }
 
 void DeadLockDetector::PopLock(const char* name)
 {
-	LockGuard guard(_lock);
+	LockGuard lockguard(_lock);
 
-	if (LLockStack.empty())
-		CRASH("MULTIPLE_UNLOCK");
-
-	int32 lockId = _nameToId[name];
-	if (LLockStack.top() != lockId)
-		CRASH("INVALID_UNLOCK");
-
-	LLockStack.pop();
-
+	if (_lockStack.empty())
+	{
+		CRASH("INVALID POP");
+	}
+	if (_lockStack.top() != _nameToId[name])
+	{
+		CRASH("INVALID POP");
+	}
+	_lockStack.pop();
 }
 
 void DeadLockDetector::CheckCycle()
 {
 	const int32 lockCount = static_cast<int32>(_nameToId.size());
-	_discoredOrder = std::vector<int32>(lockCount, -1);
+	_discoveredOrder = std::vector<int32>(lockCount, -1);
 	_discoveredCount = 0;
 	_finished = std::vector<bool>(lockCount, false);
 	_parent = std::vector<int32>(lockCount, -1);
-
-	for (int32 lockId = 0; lockId < lockCount; lockId++)
-		Dfs(lockId);
-
-	_discoredOrder.clear();
+	
+	for (int32 idx = 0; idx < lockCount; ++idx)
+		Dfs(0);
+	
+	_discoveredOrder.clear();
 	_finished.clear();
 	_parent.clear();
-
 }
 
-void DeadLockDetector::Dfs(int32 here)
+void DeadLockDetector::Dfs(int32 index)
 {
-	if (_discoredOrder[here] != -1)
-		return;
-
-	_discoredOrder[here] = _discoveredCount++;
-
-	auto findIt = _lockHistory.find(here);
-	if (findIt == _lockHistory.end())
+	if (_finished[index])
 	{
-		_finished[here] = true;
 		return;
 	}
 
-	std::set<int32>& nextSet = findIt->second;
-	for (int32 there : nextSet)
+	_discoveredOrder[index] = _discoveredCount++;
+
+	auto historyFind = _lockHistory.find(index);
+	if (historyFind == _lockHistory.end())
 	{
-		if (_discoredOrder[there] == -1)
+		_finished[index] = true;
+		return;
+	}
+	
+	std::set<int32>& historyNow = historyFind->second;
+	for (auto later : historyNow)
+	{
+		if (_discoveredOrder[later] != -1)
 		{
-			_parent[there] = here;
-			Dfs(there);
+			_parent[later] = index;
+			Dfs(later);
 			continue;
 		}
 
-		if (_discoredOrder[here] < _discoredOrder[there])
+		if (_discoveredOrder[index] < _discoveredOrder[later])
 			continue;
 
-		if (_finished[there] == false)
+		if (_finished[later] == false)
 		{
-			printf("%s -> %s\n", _idToName[here], _idToName[there]);
-
-			int32 now = here;
-			while (true) {
+			printf("%s -> %s\n", _idToName[index], _idToName[later]);
+			int32 now = index;
+			while (true)
+			{
 				printf("%s -> %s\n", _idToName[_parent[now]], _idToName[now]);
 				now = _parent[now];
-				if (now == there)
+				if (now == later)
 					break;
 			}
-
-			CRASH("DEADLOCK_DETECTED");
+			CRASH("DEADLOCK DETECTED");
 		}
 	}
-
-	_finished[here] = true;
+	_finished[index] = true;
 }
