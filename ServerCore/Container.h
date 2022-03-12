@@ -44,6 +44,5 @@ template<typename Key, typename Hash = std::hash<Key>, typename KeyEq = std::equ
 using UnorderedSet = std::unordered_set<Key, Hash, KeyEq, StlAllocator<Key>>;
 
 using String = std::basic_string<char, std::char_traits<char>, StlAllocator<char>>;
-
 using WString = std::basic_string<wchar_t, std::char_traits<wchar_t>, StlAllocator<wchar_t>>;
 

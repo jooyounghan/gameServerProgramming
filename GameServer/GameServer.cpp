@@ -30,28 +30,18 @@ int main() {
 	std::vector<Knight, StlAllocator<Knight>> a(10);
 
 
-	//GThreadManager->Launch([=]
-	//	{
-	//		while (true)
-	//		{
-	//			std::cout << "PlayerThenAccount" << std::endl;
-	//			GPlayerManager.PlayerThenAccount();
-	//			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	//		}
-
-	//	}
-	//);
-
-	//GThreadManager->Launch([=]
-	//	{
-	//		while (true)
-	//		{
-	//			std::cout << "AccountThenPlayer" << std::endl;
-	//			GAccountManager.AccountThenPlayer();
-	//			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	//		}
-
-	//	}
-	//);
-	//GThreadManager->Join();
+	for (int32 i = 0; i < 10; ++i)
+	{
+		GThreadManager->Launch([]()
+			{
+				while (true)
+				{
+					Vector<Knight> v(10);
+					Map<int32, Knight> a;
+					a[100] = Knight();
+					std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				}
+			});
+	}
+	GThreadManager->Join();
 }
