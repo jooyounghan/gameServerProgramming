@@ -1,6 +1,6 @@
 #pragma once
 #define OUT
-
+#define _STOMP
 /* -----------------
 		Lock
 ------------------ */
@@ -12,16 +12,6 @@
 #define WRITE_LOCK_IDX(idx) WriteLockGuard writeLockGuard_##idx(_locks[idx], typeid(this).name());
 #define WRITE_LOCK WRITE_LOCK_IDX(0)
 
-/* -----------------
-		Memory
------------------- */
-#ifdef _DEBUG
-	#define XALLOC(size)		PoolAllocator::Alloc(size)
-	#define XRELEASE(ptr)		PoolAllocator::Release(ptr)
-#else
-	#define XALLOC(size)		BaseAllocator::Alloc(size)
-	#define XRELEASE(ptr)		BaseAllocator::Release(ptr)
-#endif
 
 /* -----------------
 		CRASH

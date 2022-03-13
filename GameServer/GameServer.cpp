@@ -25,20 +25,14 @@ int main() {
 	std::cout << "This is Main Server\n";
 	HelloWorld();
 
-	Knight* knight = xnew<Knight>(10, 5);
-
-	std::vector<Knight, StlAllocator<Knight>> a(10);
-
-
 	for (int32 i = 0; i < 10; ++i)
 	{
 		GThreadManager->Launch([]()
 			{
 				while (true)
 				{
-					Vector<Knight> v(10);
-					Map<int32, Knight> a;
-					a[100] = Knight();
+					std::shared_ptr<Knight> ptr = ObjectPool<Knight>::MakeShared();
+					std::shared_ptr<Knight> ptr2 = MakeShared<Knight>();
 					std::this_thread::sleep_for(std::chrono::milliseconds(10));
 				}
 			});

@@ -14,4 +14,5 @@
 
 #include "Lock.h"
 
+#include "ObjectPool.h"
 void HelloWorld();
